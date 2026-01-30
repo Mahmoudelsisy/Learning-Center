@@ -81,21 +81,26 @@ class StudentManagement extends StatelessWidget {
                 .toList();
 
             return ListView.builder(
+              padding: const EdgeInsets.all(16),
               itemCount: students.length,
               itemBuilder: (context, index) {
                 final student = students[index];
-                return ListTile(
-                  title: Text(student.name),
-                  subtitle: Text(student.phone),
-                  trailing: const Icon(Icons.arrow_forward_ios),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => StudentDetailScreen(student: student),
-                      ),
-                    );
-                  },
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: ListTile(
+                    title: Text(student.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(student.phone),
+                    trailing: const Icon(Icons.chevron_right, color: Colors.indigo),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => StudentDetailScreen(student: student),
+                        ),
+                      );
+                    },
+                  ),
                 );
               },
             );

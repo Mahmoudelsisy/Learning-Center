@@ -8,6 +8,8 @@ import '../../services/database_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/pdf_service.dart';
 import '../../models/group_model.dart';
+import '../../services/ai_service.dart';
+import '../../models/session_model.dart';
 
 class StudentDetailScreen extends StatefulWidget {
   final UserModel student;
@@ -83,6 +85,17 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
               icon: const Icon(Icons.notifications_active, color: Colors.blue),
               label: const Text("إرسال إشعار مباشر"),
               style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(50)),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () => _analyzePerformance(context),
+              icon: const Icon(Icons.analytics, color: Colors.white),
+              label: const Text("تحليل الأداء بالذكاء الاصطناعي"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.indigo,
+                foregroundColor: Colors.white,
+                minimumSize: const Size.fromHeight(50),
+              ),
             ),
             const SizedBox(height: 32),
             const Text("تصنيف الطالب (Tags)",
@@ -380,5 +393,58 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
         ],
       ),
     );
+  }
+
+  void _analyzePerformance(BuildContext context) async {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        padding: const EdgeInsets.all(24),
+        child: FutureBuilder<String>(
+          future: _getAIAnalysis(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text("تحليل الأداء الذكي", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    SizedBox(width: 8),
+                    Icon(Icons.psychology, color: Colors.indigo),
+                  ],
+                ),
+                const Divider(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Text(snapshot.data ?? "فشل التحليل", textAlign: TextAlign.right, style: const TextStyle(fontSize: 16)),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Future<String> _getAIAnalysis() async {
+    final profileSnapshot = await FirebaseDatabase.instance.ref().child('students_profiles').child(widget.student.uid).get();
+    if (!profileSnapshot.exists) return "لا توجد بيانات كافية للطالب.";
+
+    final profile = StudentProfile.fromMap(profileSnapshot.value as Map, widget.student.uid);
+    final sessionsSnapshot = await FirebaseDatabase.instance.ref().child('sessions').limitToLast(5).get();
+
+    List<SessionModel> sessions = [];
+    if (sessionsSnapshot.exists) {
+      sessions = (sessionsSnapshot.value as Map).entries.map((e) => SessionModel.fromMap(e.value, e.key)).toList();
+    }
+
+    return await AIService().analyzeStudentPerformance(profile, sessions);
   }
 }

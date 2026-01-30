@@ -66,13 +66,18 @@ class _GroupManagementScreenState extends State<GroupManagementScreen> {
           if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
           final groups = snapshot.data!;
           return ListView.builder(
+            padding: const EdgeInsets.all(16),
             itemCount: groups.length,
             itemBuilder: (context, index) {
               final group = groups[index];
-              return ListTile(
-                title: Text(group.name, textAlign: TextAlign.right),
-                subtitle: Text(group.schedule, textAlign: TextAlign.right),
-                trailing: const Icon(Icons.group),
+              return Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: ListTile(
+                  title: Text(group.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text(group.schedule),
+                  trailing: const Icon(Icons.group_work, color: Colors.teal),
+                ),
               );
             },
           );

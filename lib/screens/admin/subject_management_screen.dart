@@ -53,12 +53,17 @@ class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
           if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
           final subjects = snapshot.data!;
           return ListView.builder(
+            padding: const EdgeInsets.all(16),
             itemCount: subjects.length,
             itemBuilder: (context, index) {
               final subject = subjects[index];
-              return ListTile(
-                title: Text(subject.name, textAlign: TextAlign.right),
-                trailing: const Icon(Icons.book),
+              return Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: ListTile(
+                  title: Text(subject.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  trailing: const Icon(Icons.book, color: Colors.brown),
+                ),
               );
             },
           );

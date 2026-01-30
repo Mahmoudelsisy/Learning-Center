@@ -49,15 +49,20 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                           if (!userSnapshot.hasData || userSnapshot.data!.value == null) return const SizedBox();
                           final user = UserModel.fromMap(userSnapshot.data!.value as Map, studentProfile.uid);
 
-                          return ListTile(
-                            title: Text(user.name, textAlign: TextAlign.right),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                _buildStatusButton(user.uid, AttendanceStatus.present, Colors.green),
-                                _buildStatusButton(user.uid, AttendanceStatus.late, Colors.orange),
-                                _buildStatusButton(user.uid, AttendanceStatus.absent, Colors.red),
-                              ],
+                          return Card(
+                            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            child: ListTile(
+                              title: Text(user.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                              subtitle: Text(studentProfile.tags.isNotEmpty ? studentProfile.tags.join(' • ') : "طالب"),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _buildStatusButton(user.uid, AttendanceStatus.present, Colors.green),
+                                  _buildStatusButton(user.uid, AttendanceStatus.late, Colors.orange),
+                                  _buildStatusButton(user.uid, AttendanceStatus.absent, Colors.red),
+                                ],
+                              ),
                             ),
                           );
                         },
