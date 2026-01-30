@@ -76,6 +76,13 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
               label: const Text("تصدير تقرير PDF"),
               style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(50)),
             ),
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: () => _showNotificationDialog(context),
+              icon: const Icon(Icons.notifications_active, color: Colors.blue),
+              label: const Text("إرسال إشعار مباشر"),
+              style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(50)),
+            ),
             const SizedBox(height: 32),
             const Text("تصنيف الطالب (Tags)",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -217,5 +224,36 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
       final profile = StudentProfile.fromMap(snapshot.value as Map, widget.student.uid);
       await PdfService().generateStudentReport(profile, widget.student.name);
     }
+  }
+
+  void _showNotificationDialog(BuildContext context) {
+    final titleController = TextEditingController();
+    final bodyController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("إرسال إشعار للطالب"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(controller: titleController, decoration: const InputDecoration(labelText: "العنوان")),
+            TextField(controller: bodyController, decoration: const InputDecoration(labelText: "الرسالة")),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("إلغاء")),
+          ElevatedButton(
+            onPressed: () {
+              // In a real implementation with FCM backend, we would call a Cloud Function or API here.
+              // For now, we simulate success and log the action.
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("تم إرسال الإشعار بنجاح (محاكاة)")));
+              Navigator.pop(context);
+            },
+            child: const Text("إرسال"),
+          ),
+        ],
+      ),
+    );
   }
 }

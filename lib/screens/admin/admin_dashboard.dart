@@ -68,6 +68,14 @@ class AdminDashboard extends StatelessWidget {
   }
 
   Widget _buildAISuggestionCard(BuildContext context) {
+    final suggestions = [
+      "بناءً على أداء الطلاب الأخير، يُنصح بالتركيز على مراجعة الجبر في المجموعة أ.",
+      "تنبيه: هناك زيادة في نسبة الغياب لمجموعة العلوم يوم الثلاثاء.",
+      "اقتراح: الطالب أحمد أحرز تقدماً كبيراً، ربما يحتاج إلى تحدي جديد.",
+      "نصيحة: استخدام الوسائل البصرية في درس الفيزياء القادم سيحسن الاستيعاب بنسبة 30%."
+    ];
+    final randomSuggestion = suggestions[DateTime.now().second % suggestions.length];
+
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
@@ -76,10 +84,10 @@ class AdminDashboard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.blue.shade200),
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Row(
+          const Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Text("اقتراح الذكاء الاصطناعي", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
@@ -87,9 +95,9 @@ class AdminDashboard extends StatelessWidget {
               Icon(Icons.lightbulb, color: Colors.amber),
             ],
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
-            "بناءً على أداء الطلاب الأخير، يُنصح بالتركيز على مراجعة الجبر في المجموعة أ.",
+            randomSuggestion,
             textAlign: TextAlign.right,
           ),
         ],
