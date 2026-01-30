@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../../models/homework_model.dart';
+import '../../services/ai_service.dart';
 
 class AddHomework extends StatefulWidget {
   final String sessionId;
@@ -13,6 +14,23 @@ class AddHomework extends StatefulWidget {
 class _AddHomeworkState extends State<AddHomework> {
   final _descController = TextEditingController();
   DateTime _deadline = DateTime.now().add(const Duration(days: 7));
+  bool _isGenerating = false;
+
+  void _generateAIHomework() async {
+    setState(() => _isGenerating = true);
+    try {
+      final aiService = AIService(apiKey: 'YOUR_GEMINI_API_KEY');
+      final prompt = "اقترح واجب منزلي مميز باللغة العربية لموضوع دراسي. يجب أن يكون الواجب قصيراً وفعالاً.";
+      final suggestion = await aiService.getChatResponse(prompt);
+      setState(() {
+        _descController.text = suggestion;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("فشل توليد الواجب")));
+    } finally {
+      setState(() => _isGenerating = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,10 +42,18 @@ class _AddHomeworkState extends State<AddHomework> {
           children: [
             TextField(
               controller: _descController,
-              maxLines: 3,
-              decoration: const InputDecoration(
+              maxLines: 5,
+              textAlign: TextAlign.right,
+              decoration: InputDecoration(
                 labelText: "وصف الواجب",
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: _isGenerating
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.psychology, color: Colors.purple),
+                  onPressed: _isGenerating ? null : _generateAIHomework,
+                  tooltip: "توليد بواسطة الذكاء الاصطناعي",
+                ),
               ),
             ),
             const SizedBox(height: 16),

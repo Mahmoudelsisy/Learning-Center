@@ -7,6 +7,7 @@ import '../../models/student_profile.dart';
 import '../../services/database_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/pdf_service.dart';
+import '../../models/group_model.dart';
 
 class StudentDetailScreen extends StatefulWidget {
   final UserModel student;
@@ -115,14 +116,24 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                 if (snapshot.hasData && snapshot.data!.snapshot.value != null) {
                   final profile = StudentProfile.fromMap(
                       snapshot.data!.snapshot.value as Map, widget.student.uid);
-                  return Wrap(
-                    spacing: 8,
-                    children: profile.tags
-                        .map((tag) => Chip(
-                              label: Text(tag),
-                              onDeleted: () => _removeTag(profile, tag),
-                            ))
-                        .toList(),
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Wrap(
+                        spacing: 8,
+                        children: profile.tags
+                            .map((tag) => Chip(
+                                  label: Text(tag),
+                                  onDeleted: () => _removeTag(profile, tag),
+                                ))
+                            .toList(),
+                      ),
+                      const SizedBox(height: 32),
+                      const Text("المجموعات الدراسية",
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 16),
+                      _buildGroupManager(profile),
+                    ],
                   );
                 }
                 return const SizedBox();
@@ -132,6 +143,68 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildGroupManager(StudentProfile profile) {
+    final dbService = DatabaseService();
+    return Column(
+      children: [
+        StreamBuilder<List<GroupModel>>(
+          stream: dbService.getGroups(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) return const SizedBox();
+            final allGroups = snapshot.data!;
+            final availableGroups = allGroups.where((g) => !profile.groupIds.contains(g.id)).toList();
+
+            return Column(
+              children: [
+                ...profile.groupIds.map((gid) {
+                  final group = allGroups.firstWhere((g) => g.id == gid,
+                      orElse: () => GroupModel(id: gid, name: "مجموعة غير معروفة", schedule: ""));
+                  return ListTile(
+                    title: Text(group.name, textAlign: TextAlign.right),
+                    subtitle: Text(group.schedule, textAlign: TextAlign.right),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.remove_circle, color: Colors.red),
+                      onPressed: () => _removeGroup(profile, gid),
+                    ),
+                  );
+                }),
+                if (availableGroups.isNotEmpty)
+                  DropdownButtonFormField<String>(
+                    decoration: const InputDecoration(labelText: "إضافة إلى مجموعة"),
+                    items: availableGroups.map((g) => DropdownMenuItem(
+                      value: g.id,
+                      child: Text(g.name, textAlign: TextAlign.right),
+                    )).toList(),
+                    onChanged: (val) {
+                      if (val != null) _addGroupToProfile(profile, val);
+                    },
+                  ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  void _addGroupToProfile(StudentProfile profile, String groupId) async {
+    final ref = FirebaseDatabase.instance
+        .ref()
+        .child('students_profiles')
+        .child(widget.student.uid);
+    final newGroups = List<String>.from(profile.groupIds)..add(groupId);
+    await ref.update({'group_ids': newGroups});
+  }
+
+  void _removeGroup(StudentProfile profile, String groupId) async {
+    final ref = FirebaseDatabase.instance
+        .ref()
+        .child('students_profiles')
+        .child(widget.student.uid);
+    final newGroups = List<String>.from(profile.groupIds)..remove(groupId);
+    await ref.update({'group_ids': newGroups});
   }
 
   void _addTag() async {
