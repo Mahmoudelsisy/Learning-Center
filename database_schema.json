@@ -1,0 +1,112 @@
+{
+  "users": {
+    "admin_uid_placeholder": {
+      "name": "Admin Name",
+      "email": "admin@example.com",
+      "role": "admin",
+      "phone": "0123456789",
+      "created_at": 1738000000000
+    }
+  },
+  "students_profiles": {
+    "student_uid_placeholder": {
+      "parent_id": "parent_uid_placeholder",
+      "total_stars": 0,
+      "group_id": "group_1",
+      "payment_type": "monthly",
+      "base_price": 500
+    }
+  },
+  "groups": {
+    "group_1": {
+      "name": "Group A",
+      "schedule": "Sunday 4 PM"
+    }
+  },
+  "sessions": {
+    "session_id_placeholder": {
+      "title": "Mathematics Basics",
+      "date": 1738000000000,
+      "teacher_id": "admin_uid_placeholder",
+      "group_id": "group_1",
+      "notes": "Introductory session",
+      "is_closed": false
+    }
+  },
+  "attendance": {
+    "session_id_placeholder": {
+      "student_uid_placeholder": {
+        "status": "present",
+        "notes": "On time",
+        "timestamp": 1738000000000
+      }
+    }
+  },
+  "homeworks": {
+    "homework_id_placeholder": {
+      "session_id": "session_id_placeholder",
+      "description": "Solve exercise 1 to 5",
+      "deadline": 1738500000000,
+      "created_at": 1738000000000
+    }
+  },
+  "submissions": {
+    "homework_id_placeholder": {
+      "student_uid_placeholder": {
+        "status": "pending",
+        "grade": 0,
+        "feedback": "",
+        "timestamp": 0
+      }
+    }
+  },
+  "evaluations": {
+    "student_uid_placeholder": {
+      "eval_id_placeholder": {
+        "date": 1738000000000,
+        "academic_score": 90,
+        "behavioral_score": 95,
+        "notes": "Excellent performance",
+        "type": "weekly"
+      }
+    }
+  },
+  "payments": {
+    "student_uid_placeholder": {
+      "payment_id_placeholder": {
+        "amount": 500,
+        "date": 1738000000000,
+        "status": "paid",
+        "type": "monthly",
+        "notes": "January fees"
+      }
+    }
+  },
+  "notifications": {
+    "student_uid_placeholder": {
+      "notif_id_placeholder": {
+        "title": "New Homework",
+        "body": "You have a new homework for Math",
+        "timestamp": 1738000000000,
+        "is_read": false
+      }
+    }
+  },
+  "stars_history": {
+    "student_uid_placeholder": {
+      "star_id_placeholder": {
+        "amount": 5,
+        "reason": "Top performer in class",
+        "timestamp": 1738000000000
+      }
+    }
+  },
+  "audit_logs": {
+    "log_id_placeholder": {
+      "uid": "admin_uid_placeholder",
+      "action": "ADD_STUDENT",
+      "details": "Added student_uid_placeholder",
+      "timestamp": 1738000000000
+    }
+  }
+}
