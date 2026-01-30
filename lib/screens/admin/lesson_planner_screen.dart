@@ -23,7 +23,7 @@ class _LessonPlannerScreenState extends State<LessonPlannerScreen> {
     });
 
     try {
-      final aiService = AIService(apiKey: 'YOUR_GEMINI_API_KEY');
+      final aiService = AIService();
       final plan = await aiService.generateLessonPlan(_topicController.text, _levelController.text);
       setState(() => _result = plan);
     } catch (e) {

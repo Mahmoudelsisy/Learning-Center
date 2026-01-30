@@ -133,6 +133,11 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 16),
                       _buildGroupManager(profile),
+                      const SizedBox(height: 32),
+                      const Text("سجل الحضور والغياب",
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 16),
+                      _buildAttendanceHistory(),
                     ],
                   );
                 }
@@ -205,6 +210,53 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
         .child(widget.student.uid);
     final newGroups = List<String>.from(profile.groupIds)..remove(groupId);
     await ref.update({'group_ids': newGroups});
+  }
+
+  Widget _buildAttendanceHistory() {
+    final attendanceRef = FirebaseDatabase.instance.ref().child('attendance');
+    return StreamBuilder(
+      stream: attendanceRef.onValue,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.snapshot.value == null) {
+          return const Text("لا يوجد سجل حضور حالياً", textAlign: TextAlign.right);
+        }
+        Map<dynamic, dynamic> allSessions = snapshot.data!.snapshot.value as Map;
+        List<Map<String, dynamic>> studentAttendance = [];
+
+        allSessions.forEach((sessionId, attendances) {
+          if (attendances is Map && attendances.containsKey(widget.student.uid)) {
+            final data = attendances[widget.student.uid];
+            studentAttendance.add({
+              'session': sessionId,
+              'status': data['status'],
+              'timestamp': data['timestamp'],
+            });
+          }
+        });
+
+        if (studentAttendance.isEmpty) {
+          return const Text("لا يوجد سجل حضور لهذا الطالب", textAlign: TextAlign.right);
+        }
+
+        studentAttendance.sort((a, b) => b['timestamp'].compareTo(a['timestamp']));
+
+        return Column(
+          children: studentAttendance.map((record) {
+            final status = record['status'];
+            return Card(
+              child: ListTile(
+                title: Text("جلسة: ${record['session']}", textAlign: TextAlign.right),
+                subtitle: Text(DateTime.fromMillisecondsSinceEpoch(record['timestamp']).toString().split(' ')[0], textAlign: TextAlign.right),
+                leading: Icon(
+                  status == 'present' ? Icons.check_circle : (status == 'late' ? Icons.access_time_filled : Icons.cancel),
+                  color: status == 'present' ? Colors.green : (status == 'late' ? Colors.orange : Colors.red),
+                ),
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
   }
 
   void _addTag() async {

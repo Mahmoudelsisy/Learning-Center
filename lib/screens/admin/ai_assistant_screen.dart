@@ -17,8 +17,7 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
   @override
   void initState() {
     super.initState();
-    // In a real app, the API key should be managed securely
-    _aiService = AIService(apiKey: 'YOUR_GEMINI_API_KEY');
+    _aiService = AIService();
   }
 
   void _sendMessage() async {

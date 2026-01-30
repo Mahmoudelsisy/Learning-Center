@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:provider/provider.dart';
 import '../../models/session_model.dart';
+import '../../models/group_model.dart';
+import '../../models/subject_model.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/database_service.dart';
 import 'attendance_screen.dart';
 import '../../services/pdf_service.dart';
 
@@ -34,8 +37,8 @@ class SessionListScreen extends StatelessWidget {
               itemBuilder: (context, index) {
                 final session = sessions[index];
                 return ListTile(
-                  title: Text(session.title),
-                  subtitle: Text("${session.date.toLocal()}".split(' ')[0]),
+                  title: Text(session.title, textAlign: TextAlign.right),
+                  subtitle: Text("${session.date.toLocal()}".split(' ')[0], textAlign: TextAlign.right),
                   trailing: IconButton(
                     icon: const Icon(Icons.picture_as_pdf, color: Colors.red),
                     onPressed: () => PdfService().generateSessionSummary(session, []),
@@ -60,36 +63,74 @@ class SessionListScreen extends StatelessWidget {
 
   void _showAddSessionDialog(BuildContext context) {
     final titleController = TextEditingController();
+    final dbService = DatabaseService();
+    String? selectedGroupId;
+    String? selectedSubjectId;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("إضافة حصة جديدة"),
-        content: TextField(
-          controller: titleController,
-          decoration: const InputDecoration(labelText: "عنوان الحصة"),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("إلغاء")),
-          ElevatedButton(
-            onPressed: () async {
-              if (titleController.text.isNotEmpty) {
-                final adminUid = Provider.of<AuthProvider>(context, listen: false).userModel!.uid;
-                final ref = FirebaseDatabase.instance.ref().child('sessions').push();
-                final session = SessionModel(
-                  id: ref.key!,
-                  title: titleController.text,
-                  date: DateTime.now(),
-                  teacherId: adminUid,
-                  groupId: "group_1",
-                  subjectId: "default_subject",
-                );
-                await ref.set(session.toMap());
-                Navigator.pop(context);
-              }
-            },
-            child: const Text("حفظ"),
-          ),
-        ],
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text("إضافة حصة جديدة", textAlign: TextAlign.right),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  textAlign: TextAlign.right,
+                  decoration: const InputDecoration(labelText: "عنوان الحصة"),
+                ),
+                const SizedBox(height: 12),
+                StreamBuilder<List<GroupModel>>(
+                  stream: dbService.getGroups(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) return const SizedBox();
+                    return DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(labelText: "المجموعة"),
+                      items: snapshot.data!.map((g) => DropdownMenuItem(value: g.id, child: Text(g.name))).toList(),
+                      onChanged: (val) => setState(() => selectedGroupId = val),
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+                StreamBuilder<List<SubjectModel>>(
+                  stream: dbService.getSubjects(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) return const SizedBox();
+                    return DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(labelText: "المادة"),
+                      items: snapshot.data!.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))).toList(),
+                      onChanged: (val) => setState(() => selectedSubjectId = val),
+                    );
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text("إلغاء")),
+              ElevatedButton(
+                onPressed: () async {
+                  if (titleController.text.isNotEmpty && selectedGroupId != null && selectedSubjectId != null) {
+                    final adminUid = Provider.of<AuthProvider>(context, listen: false).userModel!.uid;
+                    final ref = FirebaseDatabase.instance.ref().child('sessions').push();
+                    final session = SessionModel(
+                      id: ref.key!,
+                      title: titleController.text,
+                      date: DateTime.now(),
+                      teacherId: adminUid,
+                      groupId: selectedGroupId!,
+                      subjectId: selectedSubjectId!,
+                    );
+                    await ref.set(session.toMap());
+                    Navigator.pop(context);
+                  }
+                },
+                child: const Text("حفظ"),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

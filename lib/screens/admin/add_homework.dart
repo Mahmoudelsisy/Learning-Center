@@ -19,7 +19,7 @@ class _AddHomeworkState extends State<AddHomework> {
   void _generateAIHomework() async {
     setState(() => _isGenerating = true);
     try {
-      final aiService = AIService(apiKey: 'YOUR_GEMINI_API_KEY');
+      final aiService = AIService();
       final prompt = "اقترح واجب منزلي مميز باللغة العربية لموضوع دراسي. يجب أن يكون الواجب قصيراً وفعالاً.";
       final suggestion = await aiService.getChatResponse(prompt);
       setState(() {

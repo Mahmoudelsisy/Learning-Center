@@ -3,14 +3,16 @@ import '../models/student_profile.dart';
 import '../models/session_model.dart';
 
 class AIService {
-  final String apiKey;
+  // Centralized API Key. Replace with your actual key or use an environment variable.
+  static const String geminiApiKey = 'YOUR_GEMINI_API_KEY';
+
   late final GenerativeModel _model;
   ChatSession? _chatSession;
 
-  AIService({required this.apiKey}) {
+  AIService({String? apiKey}) {
     _model = GenerativeModel(
       model: 'gemini-1.5-flash',
-      apiKey: apiKey,
+      apiKey: apiKey ?? geminiApiKey,
     );
   }
 
