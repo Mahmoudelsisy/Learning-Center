@@ -6,7 +6,6 @@ import 'providers/auth_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'utils/app_colors.dart';
-import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,9 +13,8 @@ void main() async {
   // but we are implementing the code for the user to use.
   try {
     await Firebase.initializeApp();
-    await NotificationService().initialize();
   } catch (e) {
-    print("Firebase/Notifications not initialized: $e");
+    print("Firebase not initialized: $e");
   }
 
   runApp(const LearningCenterApp());

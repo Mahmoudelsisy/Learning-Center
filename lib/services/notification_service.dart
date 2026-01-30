@@ -1,11 +1,12 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class NotificationService {
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
 
-  Future<void> initialize() async {
+  Future<void> initialize(String? userUid) async {
     // Request permissions
     await _fcm.requestPermission(
       alert: true,
@@ -13,12 +14,13 @@ class NotificationService {
       sound: true,
     );
 
-    // Get token (for individual notifications)
+    // Get token and save to user profile
     String? token = await _fcm.getToken();
-    if (token != null) {
-      // Logic to save token to database could be called here
-      // For now we print it, but ideally it should be in the user's profile
-      print("FCM Token: $token");
+    if (token != null && userUid != null) {
+      await FirebaseDatabase.instance.ref().child('users').child(userUid).update({
+        'fcm_token': token,
+      });
+      print("FCM Token saved for $userUid");
     }
 
     // Configure foreground notifications
@@ -27,10 +29,10 @@ class NotificationService {
       AndroidNotification? android = message.notification?.android;
       if (notification != null && android != null) {
         _localNotifications.show(
-          notification.hashCode,
-          notification.title,
-          notification.body,
-          const NotificationDetails(
+          id: notification.hashCode,
+          title: notification.title,
+          body: notification.body,
+          notificationDetails: const NotificationDetails(
             android: AndroidNotificationDetails(
               'high_importance_channel',
               'High Importance Notifications',

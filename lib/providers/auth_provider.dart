@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../models/user_model.dart';
+import '../services/notification_service.dart';
 
 class AuthProvider with ChangeNotifier {
   final AuthService _authService = AuthService();
@@ -20,6 +21,9 @@ class AuthProvider with ChangeNotifier {
       _userModel = null;
     } else {
       _userModel = await _authService.getUserData(firebaseUser.uid);
+      if (_userModel != null) {
+        NotificationService().initialize(_userModel!.uid);
+      }
     }
     _isLoading = false;
     notifyListeners();

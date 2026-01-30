@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../../models/homework_model.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class HomeworkListScreen extends StatelessWidget {
   const HomeworkListScreen({super.key});
@@ -21,17 +22,19 @@ class HomeworkListScreen extends StatelessWidget {
                 .toList();
 
             return ListView.builder(
+              padding: const EdgeInsets.all(16),
               itemCount: homeworks.length,
               itemBuilder: (context, index) {
                 final hw = homeworks[index];
                 return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   child: ListTile(
-                    title: Text(hw.description),
-                    subtitle: Text("موعد التسليم: ${hw.deadline.toLocal()}".split(' ')[0]),
-                    trailing: const Icon(Icons.assignment),
+                    title: Text(hw.description, textAlign: TextAlign.right),
+                    subtitle: Text("موعد التسليم: ${hw.deadline.toLocal()}".split(' ')[0], textAlign: TextAlign.right),
+                    leading: const Icon(Icons.assignment_turned_in, color: Colors.blue),
                   ),
-                );
+                ).animate().fadeIn().slideX();
               },
             );
           }
