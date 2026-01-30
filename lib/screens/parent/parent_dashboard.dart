@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../shared/payment_history_screen.dart';
+import '../shared/evaluation_list_screen.dart';
 
 class ParentDashboard extends StatelessWidget {
   const ParentDashboard({super.key});
@@ -20,16 +22,25 @@ class ParentDashboard extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const ListTile(
-            leading: Icon(Icons.child_care, color: Colors.blue),
-            title: Text("أبنائي"),
-            subtitle: Text("متابعة الحضور والأداء"),
+          ListTile(
+            leading: const Icon(Icons.child_care, color: Colors.blue),
+            title: const Text("متابعة الأبناء"),
+            subtitle: const Text("متابعة الحضور والأداء"),
+            onTap: () {
+              // Assuming one child for simplicity in this version
+              final uid = Provider.of<AuthProvider>(context, listen: false).userModel!.uid;
+              Navigator.push(context, MaterialPageRoute(builder: (_) => EvaluationListScreen(studentId: uid)));
+            },
           ),
           const Divider(),
-          const ListTile(
-            leading: Icon(Icons.payment, color: Colors.green),
-            title: Text("الحالة المالية"),
-            subtitle: Text("المبالغ المدفوعة والمتبقية"),
+          ListTile(
+            leading: const Icon(Icons.payment, color: Colors.green),
+            title: const Text("الحالة المالية"),
+            subtitle: const Text("المبالغ المدفوعة والمتبقية"),
+            onTap: () {
+              final uid = Provider.of<AuthProvider>(context, listen: false).userModel!.uid;
+              Navigator.push(context, MaterialPageRoute(builder: (_) => PaymentHistoryScreen(studentId: uid)));
+            },
           ),
         ],
       ),

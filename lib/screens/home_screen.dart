@@ -22,8 +22,6 @@ class HomeScreen extends StatelessWidget {
         return const StudentDashboard();
       case UserRole.parent:
         return const ParentDashboard();
-      default:
-        return const Center(child: Text("Role unknown"));
     }
   }
 }
