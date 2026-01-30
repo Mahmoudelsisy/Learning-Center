@@ -4,6 +4,7 @@ import '../../providers/auth_provider.dart';
 import 'student_management.dart';
 import 'session_list_screen.dart';
 import 'payment_management_screen.dart';
+import 'insights_screen.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
@@ -35,6 +36,9 @@ class AdminDashboard extends StatelessWidget {
           }),
           _buildCard(context, "الحصص", Icons.book, Colors.purple, () {
             Navigator.push(context, MaterialPageRoute(builder: (_) => const SessionListScreen()));
+          }),
+          _buildCard(context, "التحليلات", Icons.insights, Colors.indigo, () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const InsightsScreen()));
           }),
         ],
       ),

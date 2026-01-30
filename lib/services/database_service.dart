@@ -44,4 +44,19 @@ class DatabaseService {
     }
     return null;
   }
+
+  // Audit Logs
+  Future<void> logAction({
+    required String uid,
+    required String action,
+    required String details,
+  }) async {
+    final logRef = _dbRef.child('audit_logs').push();
+    await logRef.set({
+      'uid': uid,
+      'action': action,
+      'details': details,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+    });
+  }
 }

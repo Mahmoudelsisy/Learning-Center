@@ -18,6 +18,15 @@ class _SignupScreenState extends State<SignupScreen> {
   UserRole _selectedRole = UserRole.student;
 
   @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _nameController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
 
@@ -62,7 +71,7 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<UserRole>(
-              initialValue: _selectedRole,
+              value: _selectedRole, // Reverting to 'value' as it is safer across versions
               decoration: const InputDecoration(
                 labelText: "نوع الحساب",
                 border: OutlineInputBorder(),

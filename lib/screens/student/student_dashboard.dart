@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_database/firebase_database.dart';
 import '../../providers/auth_provider.dart';
 import '../shared/homework_list_screen.dart';
 import '../shared/evaluation_list_screen.dart';
@@ -22,18 +23,33 @@ class StudentDashboard extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Card(
-            color: Colors.amberAccent,
-            child: Padding(
-              padding: EdgeInsets.all(24.0),
-              child: Column(
-                children: [
-                  Icon(Icons.stars, size: 64, color: Colors.orange),
-                  SizedBox(height: 8),
-                  Text("رصيد النجوم: 15", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                ],
-              ),
-            ),
+          StreamBuilder(
+            stream: FirebaseDatabase.instance
+                .ref()
+                .child('students_profiles')
+                .child(Provider.of<AuthProvider>(context, listen: false).userModel!.uid)
+                .child('total_stars')
+                .onValue,
+            builder: (context, snapshot) {
+              int stars = 0;
+              if (snapshot.hasData && snapshot.data!.snapshot.value != null) {
+                stars = snapshot.data!.snapshot.value as int;
+              }
+              return Card(
+                color: Colors.amberAccent,
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    children: [
+                      const Icon(Icons.stars, size: 64, color: Colors.orange),
+                      const SizedBox(height: 8),
+                      Text("رصيد النجوم: $stars",
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
           const SizedBox(height: 16),
           ListTile(

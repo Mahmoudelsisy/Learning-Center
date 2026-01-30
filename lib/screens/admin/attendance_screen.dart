@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:provider/provider.dart';
 import '../../models/session_model.dart';
 import '../../models/attendance_model.dart';
 import '../../models/user_model.dart';
+import '../../services/database_service.dart';
+import '../../providers/auth_provider.dart';
 
 class AttendanceScreen extends StatefulWidget {
   final SessionModel session;
@@ -83,6 +86,9 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   }
 
   void _saveAttendance(DatabaseReference ref) async {
+    final dbService = DatabaseService();
+    final adminUid = Provider.of<AuthProvider>(context, listen: false).userModel!.uid;
+
     for (var entry in attendanceData.entries) {
       final attendance = AttendanceModel(
         studentId: entry.key,
@@ -91,6 +97,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       );
       await ref.child(entry.key).set(attendance.toMap());
     }
+
+    await dbService.logAction(
+      uid: adminUid,
+      action: "RECORD_ATTENDANCE",
+      details: "Recorded attendance for session ${widget.session.title}",
+    );
+
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("تم حفظ الحضور بنجاح")));
     Navigator.pop(context);
   }

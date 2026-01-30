@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:provider/provider.dart';
 import '../../models/session_model.dart';
+import '../../providers/auth_provider.dart';
 import 'attendance_screen.dart';
 
 class SessionListScreen extends StatelessWidget {
@@ -67,12 +69,13 @@ class SessionListScreen extends StatelessWidget {
           ElevatedButton(
             onPressed: () async {
               if (titleController.text.isNotEmpty) {
+                final adminUid = Provider.of<AuthProvider>(context, listen: false).userModel!.uid;
                 final ref = FirebaseDatabase.instance.ref().child('sessions').push();
                 final session = SessionModel(
                   id: ref.key!,
                   title: titleController.text,
                   date: DateTime.now(),
-                  teacherId: "admin", // Should get from current user
+                  teacherId: adminUid,
                   groupId: "group_1",
                 );
                 await ref.set(session.toMap());

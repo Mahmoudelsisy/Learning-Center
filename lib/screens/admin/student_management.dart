@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../../models/user_model.dart';
+import 'student_detail_screen.dart';
 
 class StudentManagement extends StatelessWidget {
   const StudentManagement({super.key});
@@ -29,7 +30,12 @@ class StudentManagement extends StatelessWidget {
                   subtitle: Text(student.phone),
                   trailing: const Icon(Icons.arrow_forward_ios),
                   onTap: () {
-                    // Go to student details
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => StudentDetailScreen(student: student),
+                      ),
+                    );
                   },
                 );
               },

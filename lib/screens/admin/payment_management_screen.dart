@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:provider/provider.dart';
 import '../../models/user_model.dart';
+import '../../services/database_service.dart';
+import '../../providers/auth_provider.dart';
 
 class PaymentManagementScreen extends StatelessWidget {
   const PaymentManagementScreen({super.key});
@@ -62,6 +65,14 @@ class PaymentManagementScreen extends StatelessWidget {
                   'status': 'paid',
                   'type': 'manual',
                 });
+
+                final adminUid = Provider.of<AuthProvider>(context, listen: false).userModel!.uid;
+                await DatabaseService().logAction(
+                  uid: adminUid,
+                  action: "ADD_PAYMENT",
+                  details: "Added payment of ${amountController.text} for student ${student.name}",
+                );
+
                 Navigator.pop(context);
               }
             },
