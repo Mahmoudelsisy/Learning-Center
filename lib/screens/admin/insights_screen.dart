@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../models/attendance_model.dart';
 import '../../models/user_model.dart';
 import '../../utils/analytics_engine.dart';
+import '../../services/pdf_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 class InsightsScreen extends StatelessWidget {
@@ -15,7 +16,16 @@ class InsightsScreen extends StatelessWidget {
     final dbService = DatabaseService();
 
     return Scaffold(
-      appBar: AppBar(title: const Text("التحليلات والذكاء")),
+      appBar: AppBar(
+        title: const Text("التحليلات والذكاء"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf),
+            onPressed: () => _exportFinancialReport(dbService),
+            tooltip: "تصدير تقرير مالي",
+          )
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -154,5 +164,26 @@ class InsightsScreen extends StatelessWidget {
       }
     }
     return result;
+  }
+
+  void _exportFinancialReport(DatabaseService dbService) async {
+    final paymentsMap = await dbService.getPayments().first;
+    List<Map<String, dynamic>> paymentsList = [];
+
+    paymentsMap.forEach((_, payments) {
+      if (payments is Map) {
+        for (var p in payments.values) {
+          paymentsList.add({
+            'amount': p['amount'],
+            'date': DateTime.fromMillisecondsSinceEpoch(p['date'] ?? 0),
+            'status': p['status'],
+          });
+        }
+      }
+    });
+
+    if (paymentsList.isNotEmpty) {
+      await PdfService().generateFinancialReport(paymentsList);
+    }
   }
 }

@@ -20,6 +20,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   Map<String, AttendanceStatus> attendanceData = {};
   final DatabaseService _dbService = DatabaseService();
   bool _isInitialized = false;
+  late bool _isSessionClosed;
+
+  @override
+  void initState() {
+    super.initState();
+    _isSessionClosed = widget.session.isClosed;
+  }
 
   void _initializeAttendance(List<AttendanceModel> savedData) {
     if (!_isInitialized) {
@@ -33,7 +40,22 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("تحضير: ${widget.session.title}")),
+      appBar: AppBar(
+        title: Text("تحضير: ${widget.session.title}"),
+        actions: [
+          if (!_isSessionClosed)
+            TextButton.icon(
+              onPressed: _closeSession,
+              icon: const Icon(Icons.lock_outline, color: Colors.red),
+              label: const Text("إغلاق الحصة", style: TextStyle(color: Colors.red)),
+            )
+          else
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Center(child: Text("الحصة مغلقة 🔒", style: TextStyle(color: Colors.grey))),
+            )
+        ],
+      ),
       body: StreamBuilder<List<AttendanceModel>>(
         stream: _dbService.getAttendance(widget.session.id),
         builder: (context, attendanceSnap) {
@@ -45,62 +67,62 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
             stream: _dbService.getStudents(),
             builder: (context, snapshot) {
               if (snapshot.hasData) {
-            final allStudents = snapshot.data!;
-            // Filter students who belong to this session's group
-            final groupStudents = allStudents.where((s) => s.groupIds.contains(widget.session.groupId)).toList();
+                final allStudents = snapshot.data!;
+                final groupStudents = allStudents.where((s) => s.groupIds.contains(widget.session.groupId)).toList();
 
-            if (groupStudents.isEmpty) {
-              return const Center(child: Text("لا يوجد طلاب في هذه المجموعة"));
-            }
+                if (groupStudents.isEmpty) {
+                  return const Center(child: Text("لا يوجد طلاب في هذه المجموعة"));
+                }
 
-            return Column(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: groupStudents.length,
-                    itemBuilder: (context, index) {
-                      final studentProfile = groupStudents[index];
-                      return FutureBuilder<DataSnapshot>(
-                        future: FirebaseDatabase.instance.ref().child('users').child(studentProfile.uid).get(),
-                        builder: (context, userSnapshot) {
-                          if (!userSnapshot.hasData || userSnapshot.data!.value == null) return const SizedBox();
-                          final user = UserModel.fromMap(userSnapshot.data!.value as Map, studentProfile.uid);
+                return Column(
+                  children: [
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: groupStudents.length,
+                        itemBuilder: (context, index) {
+                          final studentProfile = groupStudents[index];
+                          return FutureBuilder<DataSnapshot>(
+                            future: FirebaseDatabase.instance.ref().child('users').child(studentProfile.uid).get(),
+                            builder: (context, userSnapshot) {
+                              if (!userSnapshot.hasData || userSnapshot.data!.value == null) return const SizedBox();
+                              final user = UserModel.fromMap(userSnapshot.data!.value as Map, studentProfile.uid);
 
-                          return Card(
-                            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            child: ListTile(
-                              title: Text(user.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                              subtitle: Text(studentProfile.tags.isNotEmpty ? studentProfile.tags.join(' • ') : "طالب"),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  _buildStatusButton(user.uid, AttendanceStatus.present, Colors.green),
-                                  _buildStatusButton(user.uid, AttendanceStatus.late, Colors.orange),
-                                  _buildStatusButton(user.uid, AttendanceStatus.absent, Colors.red),
-                                ],
-                              ),
-                            ),
+                              return Card(
+                                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                child: ListTile(
+                                  title: Text(user.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                  subtitle: Text(studentProfile.tags.isNotEmpty ? studentProfile.tags.join(' • ') : "طالب"),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      _buildStatusButton(user.uid, AttendanceStatus.present, Colors.green),
+                                      _buildStatusButton(user.uid, AttendanceStatus.late, Colors.orange),
+                                      _buildStatusButton(user.uid, AttendanceStatus.absent, Colors.red),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
                           );
                         },
-                      );
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue.shade900,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size.fromHeight(50)
+                      ),
                     ),
-                    onPressed: () => _saveAttendance(),
-                    child: const Text("حفظ الكشف"),
-                  ),
-                )
-              ],
-            );
+                    if (!_isSessionClosed)
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue.shade900,
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size.fromHeight(50)
+                          ),
+                          onPressed: () => _saveAttendance(),
+                          child: const Text("حفظ الكشف"),
+                        ),
+                      )
+                  ],
+                );
               }
               return const Center(child: CircularProgressIndicator());
             },
@@ -119,8 +141,28 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
             : (status == AttendanceStatus.late ? Icons.access_time_filled : Icons.cancel),
         color: isSelected ? color : Colors.grey,
       ),
-      onPressed: () => setState(() => attendanceData[studentId] = status),
+      onPressed: _isSessionClosed ? null : () => setState(() => attendanceData[studentId] = status),
     );
+  }
+
+  void _closeSession() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("تأكيد إغلاق الحصة"),
+        content: const Text("لن تتمكن من تعديل الكشف بعد إغلاق الحصة. هل أنت متأكد؟"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("إلغاء")),
+          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text("إغلاق")),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await FirebaseDatabase.instance.ref().child('sessions').child(widget.session.id).update({'is_closed': true});
+      setState(() => _isSessionClosed = true);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("تم إغلاق الحصة بنجاح")));
+    }
   }
 
   void _saveAttendance() async {

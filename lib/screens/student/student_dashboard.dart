@@ -88,6 +88,18 @@ class StudentDashboard extends StatelessWidget {
               const SizedBox(height: 12),
               const Text("رصيدك من النجوم", style: TextStyle(color: Colors.white, fontSize: 18)),
               Text("$stars", style: const TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              StreamBuilder<DataSnapshot>(
+                stream: FirebaseDatabase.instance.ref().child('students_profiles').child(uid).child('badges').onValue.map((e) => e.snapshot),
+                builder: (context, badgeSnap) {
+                  if (!badgeSnap.hasData || badgeSnap.data!.value == null) return const SizedBox();
+                  final badges = List<String>.from(badgeSnap.data!.value as List);
+                  return Wrap(
+                    spacing: 4,
+                    children: badges.map((b) => const Icon(Icons.workspace_premium, color: Colors.amberAccent, size: 28)).toList(),
+                  );
+                },
+              ),
             ],
           ),
         );

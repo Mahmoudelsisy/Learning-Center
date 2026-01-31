@@ -66,4 +66,42 @@ class PdfService {
 
     await Printing.layoutPdf(onLayout: (PdfPageFormat format) async => pdf.save());
   }
+
+  Future<void> generateFinancialReport(List<Map<String, dynamic>> payments) async {
+    final pdf = pw.Document();
+    final font = await PdfGoogleFonts.alexandriaRegular();
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (pw.Context context) {
+          return pw.Directionality(
+            textDirection: pw.TextDirection.rtl,
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+              children: [
+                pw.Text('التقرير المالي للسنتر', style: pw.TextStyle(font: font, fontSize: 24)),
+                pw.SizedBox(height: 20),
+                pw.TableHelper.fromTextArray(
+                  context: context,
+                  cellStyle: pw.TextStyle(font: font),
+                  headerStyle: pw.TextStyle(font: font, fontWeight: pw.FontWeight.bold),
+                  data: <List<String>>[
+                    <String>['التاريخ', 'المبلغ', 'الحالة'],
+                    ...payments.map((p) => [
+                      p['date'].toString().split(' ')[0],
+                      p['amount'].toString(),
+                      p['status'] == 'paid' ? 'تم الدفع' : 'معلق'
+                    ]),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+
+    await Printing.layoutPdf(onLayout: (PdfPageFormat format) async => pdf.save());
+  }
 }

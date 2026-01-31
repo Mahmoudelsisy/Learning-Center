@@ -152,6 +152,11 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                       const SizedBox(height: 16),
                       _buildParentLinker(profile),
                       const SizedBox(height: 32),
+                      const Text("الأوسمة والشارات",
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 16),
+                      _buildBadgeManager(profile),
+                      const SizedBox(height: 32),
                       const Text("سجل الحضور والغياب",
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 16),
@@ -267,6 +272,46 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
         );
       },
     );
+  }
+
+  Widget _buildBadgeManager(StudentProfile profile) {
+    final badgeList = ["طالب مثالي", "عبقري الرياضيات", "مبتكر المادة", "الأكثر تفاعلاً", "ملك الحضور"];
+    return Column(
+      children: [
+        Wrap(
+          spacing: 8,
+          children: profile.badges.map((b) => Chip(
+            backgroundColor: Colors.amber.shade100,
+            avatar: const Icon(Icons.workspace_premium, color: Colors.orange, size: 18),
+            label: Text(b),
+            onDeleted: () => _removeBadge(profile, b),
+          )).toList(),
+        ),
+        const SizedBox(height: 12),
+        DropdownButtonFormField<String>(
+          decoration: const InputDecoration(labelText: "منح وسام جديد"),
+          items: badgeList.where((b) => !profile.badges.contains(b)).map((b) => DropdownMenuItem(value: b, child: Text(b))).toList(),
+          onChanged: (val) {
+            if (val != null) _addBadge(profile, val);
+          },
+        ),
+      ],
+    );
+  }
+
+  void _addBadge(StudentProfile profile, String badge) async {
+    final ref = FirebaseDatabase.instance.ref().child('students_profiles').child(widget.student.uid);
+    final newBadges = List<String>.from(profile.badges)..add(badge);
+    await ref.update({'badges': newBadges});
+
+    final adminUid = Provider.of<AuthProvider>(context, listen: false).userModel!.uid;
+    await DatabaseService().logAction(uid: adminUid, action: "AWARD_BADGE", details: "Awarded badge: $badge to ${widget.student.name}");
+  }
+
+  void _removeBadge(StudentProfile profile, String badge) async {
+    final ref = FirebaseDatabase.instance.ref().child('students_profiles').child(widget.student.uid);
+    final newBadges = List<String>.from(profile.badges)..remove(badge);
+    await ref.update({'badges': newBadges});
   }
 
   Widget _buildAttendanceHistory() {

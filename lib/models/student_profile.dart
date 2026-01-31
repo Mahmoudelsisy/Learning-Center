@@ -6,6 +6,7 @@ class StudentProfile {
   final String paymentType; // monthly, session
   final double basePrice;
   final List<String> tags;
+  final List<String> badges;
 
   StudentProfile({
     required this.uid,
@@ -15,6 +16,7 @@ class StudentProfile {
     required this.paymentType,
     required this.basePrice,
     this.tags = const [],
+    this.badges = const [],
   });
 
   factory StudentProfile.fromMap(Map<dynamic, dynamic> map, String uid) {
@@ -26,6 +28,7 @@ class StudentProfile {
       paymentType: map['payment_type'] ?? 'monthly',
       basePrice: (map['base_price'] ?? 0).toDouble(),
       tags: List<String>.from(map['tags'] ?? []),
+      badges: List<String>.from(map['badges'] ?? []),
     );
   }
 
@@ -37,6 +40,7 @@ class StudentProfile {
       'payment_type': paymentType,
       'base_price': basePrice,
       'tags': tags,
+      'badges': badges,
     };
   }
 }
