@@ -7,6 +7,13 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
 
   Future<void> initialize(String? userUid) async {
+    // Initialize Local Notifications
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const InitializationSettings initializationSettings =
+        InitializationSettings(android: initializationSettingsAndroid);
+    await _localNotifications.initialize(initializationSettings);
+
     // Request permissions
     await _fcm.requestPermission(
       alert: true,

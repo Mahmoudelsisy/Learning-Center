@@ -96,6 +96,17 @@ class DatabaseService {
     });
   }
 
+  Stream<List<Map<String, dynamic>>> getNotifications(String uid) {
+    return _dbRef.child('notifications').child(uid).onValue.map((event) {
+      Map<dynamic, dynamic>? notifsMap = event.snapshot.value as Map?;
+      if (notifsMap == null) return [];
+      return notifsMap.entries.map((e) => {
+        'id': e.key,
+        ...Map<String, dynamic>.from(e.value as Map),
+      }).toList()..sort((a, b) => b['timestamp'].compareTo(a['timestamp']));
+    });
+  }
+
   // Audit Logs
   Future<void> logAction({
     required String uid,

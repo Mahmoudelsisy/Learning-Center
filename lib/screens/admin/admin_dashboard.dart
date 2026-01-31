@@ -11,6 +11,7 @@ import 'subject_management_screen.dart';
 import 'ai_assistant_screen.dart';
 import 'lesson_planner_screen.dart';
 import 'material_management_screen.dart';
+import 'audit_log_screen.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
@@ -66,6 +67,9 @@ class AdminDashboard extends StatelessWidget {
           }),
           _buildCard(context, "المواد العلمية", Icons.science, Colors.blueGrey, () {
             Navigator.push(context, MaterialPageRoute(builder: (_) => const MaterialManagementScreen()));
+          }),
+          _buildCard(context, "سجل العمليات", Icons.history, Colors.blueGrey, () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const AuditLogScreen()));
           }),
         ],
       ),
