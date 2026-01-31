@@ -1,24 +1,18 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Professional Educational Palette
-  static const Color primary = Color(0xFF1A237E); // Deep Indigo
-  static const Color secondary = Color(0xFF00B0FF); // Light Blue
-  static const Color accent = Color(0xFFFFAB40); // Soft Orange
+  static const Color primary = Color(0xFF6750A4);
+  static const Color secondary = Color(0xFF625B71);
+  static const Color tertiary = Color(0xFF7D5260);
 
-  static const Color background = Color(0xFFF8F9FA);
+  // Calm Educational Palette
+  static const Color background = Color(0xFFF6F9FF);
   static const Color surface = Colors.white;
 
-  static const Color studentColor = Color(0xFF388E3C);
-  static const Color parentColor = Color(0xFF1976D2);
-  static const Color adminColor = Color(0xFFC2185B);
+  static const Color studentColor = Color(0xFF4CAF50); // Green
+  static const Color parentColor = Color(0xFF2196F3);  // Blue
+  static const Color adminColor = Color(0xFFE91E63);   // Pink/Red
 
-  static const Color textPrimary = Color(0xFF212121);
-  static const Color textSecondary = Color(0xFF757575);
-
-  static const LinearGradient primaryGradient = LinearGradient(
-    colors: [primary, secondary],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
+  static const Color textPrimary = Color(0xFF1C1B1F);
+  static const Color textSecondary = Color(0xFF49454F);
 }

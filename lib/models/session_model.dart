@@ -4,7 +4,6 @@ class SessionModel {
   final DateTime date;
   final String teacherId;
   final String groupId;
-  final String subjectId;
   final String notes;
   final bool isClosed;
 
@@ -14,7 +13,6 @@ class SessionModel {
     required this.date,
     required this.teacherId,
     required this.groupId,
-    required this.subjectId,
     this.notes = '',
     this.isClosed = false,
   });
@@ -26,7 +24,6 @@ class SessionModel {
       date: DateTime.fromMillisecondsSinceEpoch(map['date'] ?? 0),
       teacherId: map['teacher_id'] ?? '',
       groupId: map['group_id'] ?? '',
-      subjectId: map['subject_id'] ?? '',
       notes: map['notes'] ?? '',
       isClosed: map['is_closed'] ?? false,
     );
@@ -38,7 +35,6 @@ class SessionModel {
       'date': date.millisecondsSinceEpoch,
       'teacher_id': teacherId,
       'group_id': groupId,
-      'subject_id': subjectId,
       'notes': notes,
       'is_closed': isClosed,
     };

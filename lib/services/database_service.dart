@@ -2,8 +2,6 @@ import 'package:firebase_database/firebase_database.dart';
 import '../models/session_model.dart';
 import '../models/attendance_model.dart';
 import '../models/student_profile.dart';
-import '../models/group_model.dart';
-import '../models/subject_model.dart';
 
 class DatabaseService {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
@@ -45,66 +43,6 @@ class DatabaseService {
       return StudentProfile.fromMap(snapshot.value as Map, uid);
     }
     return null;
-  }
-
-  Stream<List<StudentProfile>> getStudents() {
-    return _dbRef.child('students_profiles').onValue.map((event) {
-      Map<dynamic, dynamic>? studentsMap = event.snapshot.value as Map?;
-      if (studentsMap == null) return [];
-      return studentsMap.entries.map((e) => StudentProfile.fromMap(e.value, e.key)).toList();
-    });
-  }
-
-  Stream<List<StudentProfile>> getChildren(String parentId) {
-    return _dbRef.child('students_profiles').orderByChild('parent_id').equalTo(parentId).onValue.map((event) {
-      Map<dynamic, dynamic>? studentsMap = event.snapshot.value as Map?;
-      if (studentsMap == null) return [];
-      return studentsMap.entries.map((e) => StudentProfile.fromMap(e.value, e.key)).toList();
-    });
-  }
-
-  // Groups
-  Future<void> createGroup(GroupModel group) async {
-    await _dbRef.child('groups').child(group.id).set(group.toMap());
-  }
-
-  Stream<List<GroupModel>> getGroups() {
-    return _dbRef.child('groups').onValue.map((event) {
-      Map<dynamic, dynamic>? groupsMap = event.snapshot.value as Map?;
-      if (groupsMap == null) return [];
-      return groupsMap.entries.map((e) => GroupModel.fromMap(e.value, e.key)).toList();
-    });
-  }
-
-  // Subjects
-  Future<void> createSubject(SubjectModel subject) async {
-    await _dbRef.child('subjects').child(subject.id).set(subject.toMap());
-  }
-
-  Stream<List<SubjectModel>> getSubjects() {
-    return _dbRef.child('subjects').onValue.map((event) {
-      Map<dynamic, dynamic>? subjectsMap = event.snapshot.value as Map?;
-      if (subjectsMap == null) return [];
-      return subjectsMap.entries.map((e) => SubjectModel.fromMap(e.value, e.key)).toList();
-    });
-  }
-
-  // Payments
-  Stream<Map<dynamic, dynamic>> getPayments() {
-    return _dbRef.child('payments').onValue.map((event) {
-      return event.snapshot.value as Map? ?? {};
-    });
-  }
-
-  Stream<List<Map<String, dynamic>>> getNotifications(String uid) {
-    return _dbRef.child('notifications').child(uid).onValue.map((event) {
-      Map<dynamic, dynamic>? notifsMap = event.snapshot.value as Map?;
-      if (notifsMap == null) return [];
-      return notifsMap.entries.map((e) => {
-        'id': e.key,
-        ...Map<String, dynamic>.from(e.value as Map),
-      }).toList()..sort((a, b) => b['timestamp'].compareTo(a['timestamp']));
-    });
   }
 
   // Audit Logs

@@ -41,14 +41,6 @@ dependencies:
   intl: ^0.20.2
   google_fonts: ^8.0.0
   shared_preferences: ^2.5.4
-  fl_chart: ^1.1.1
-  pdf: ^3.11.1
-  printing: ^5.13.2
-  google_generative_ai: ^0.4.5
-  flutter_animate: ^4.5.2
-  path_provider: ^2.1.5
-  firebase_messaging: ^16.1.1
-  flutter_local_notifications: ^20.0.0
 
 dev_dependencies:
   flutter_test:

@@ -1,26 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_database/firebase_database.dart';
 import '../../providers/auth_provider.dart';
 import '../shared/payment_history_screen.dart';
 import '../shared/evaluation_list_screen.dart';
-import '../shared/notification_list_screen.dart';
-import '../shared/attendance_history_screen.dart';
-import '../shared/material_list_screen.dart';
-import '../../utils/app_colors.dart';
-import '../../services/database_service.dart';
-import '../../models/student_profile.dart';
-import '../../models/user_model.dart';
 
 class ParentDashboard extends StatelessWidget {
   const ParentDashboard({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final user = Provider.of<AuthProvider>(context).userModel!;
-    final dbService = DatabaseService();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text("لوحة تحكم ولي الأمر"),
@@ -31,138 +19,29 @@ class ParentDashboard extends StatelessWidget {
           )
         ],
       ),
-      body: SingleChildScrollView(
+      body: ListView(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            _buildWelcomeHeader(user.name).animate().fadeIn().slideX(),
-            const SizedBox(height: 24),
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              children: [
-                _buildCard(context, "المدفوعات", Icons.payment, Colors.green, () {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => PaymentHistoryScreen(studentId: user.uid)));
-                }),
-                _buildCard(context, "التنبيهات", Icons.notifications, Colors.orange, () {
-                   Navigator.push(context, MaterialPageRoute(builder: (_) => NotificationListScreen(uid: user.uid)));
-                }),
-              ],
-            ),
-            const SizedBox(height: 32),
-            const Align(
-              alignment: Alignment.centerRight,
-              child: Text("أبنائي", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.primary)),
-            ),
-            const SizedBox(height: 16),
-            StreamBuilder<List<StudentProfile>>(
-              stream: dbService.getChildren(user.uid),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-                final children = snapshot.data!;
-
-                if (children.isEmpty) {
-                  return const Center(child: Text("لم يتم ربط أي أبناء بهذا الحساب بعد."));
-                }
-
-                return ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: children.length,
-                  itemBuilder: (context, index) {
-                    final profile = children[index];
-                    return FutureBuilder<DataSnapshot>(
-                      future: FirebaseDatabase.instance.ref().child('users').child(profile.uid).get(),
-                      builder: (context, userSnap) {
-                        if (!userSnap.hasData || userSnap.data!.value == null) return const SizedBox();
-                        final studentUser = UserModel.fromMap(userSnap.data!.value as Map, profile.uid);
-
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          child: ExpansionTile(
-                            leading: const CircleAvatar(child: Icon(Icons.person)),
-                            title: Text(studentUser.name, textAlign: TextAlign.right, style: const TextStyle(fontWeight: FontWeight.bold)),
-                            children: [
-                              ListTile(
-                                leading: const Icon(Icons.bar_chart, color: Colors.green),
-                                title: const Text("تقييم الأداء", textAlign: TextAlign.right),
-                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => EvaluationListScreen(studentId: profile.uid))),
-                              ),
-                              ListTile(
-                                leading: const Icon(Icons.payment, color: Colors.blue),
-                                title: const Text("السجل المالي", textAlign: TextAlign.right),
-                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PaymentHistoryScreen(studentId: profile.uid))),
-                              ),
-                              ListTile(
-                                leading: const Icon(Icons.notifications, color: Colors.red),
-                                title: const Text("تنبيهات الابن", textAlign: TextAlign.right),
-                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => NotificationListScreen(uid: profile.uid))),
-                              ),
-                              ListTile(
-                                leading: const Icon(Icons.calendar_today, color: Colors.teal),
-                                title: const Text("سجل الحضور", textAlign: TextAlign.right),
-                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AttendanceHistoryScreen(studentId: profile.uid))),
-                              ),
-                              ListTile(
-                                leading: const Icon(Icons.menu_book, color: Colors.orange),
-                                title: const Text("المواد العلمية", textAlign: TextAlign.right),
-                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MaterialListScreen())),
-                              ),
-                            ],
-                          ),
-                        ).animate().fadeIn(delay: Duration(milliseconds: 100 * index)).slideY();
-                      },
-                    );
-                  },
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCard(BuildContext context, String title, IconData icon, Color color, VoidCallback onTap) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 48, color: color),
-            const SizedBox(height: 12),
-            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(delay: 200.ms).scale();
-  }
-
-  Widget _buildWelcomeHeader(String name) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          const Text("مرحباً بك", style: TextStyle(color: AppColors.textSecondary, fontSize: 16)),
-          Text(name, style: const TextStyle(color: AppColors.primary, fontSize: 24, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          const Text("تابع أداء أبنائك والمدفوعات بكل سهولة", style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+          ListTile(
+            leading: const Icon(Icons.child_care, color: Colors.blue),
+            title: const Text("متابعة الأبناء"),
+            subtitle: const Text("متابعة الحضور والأداء"),
+            onTap: () {
+              // Assuming one child for simplicity in this version
+              final uid = Provider.of<AuthProvider>(context, listen: false).userModel!.uid;
+              Navigator.push(context, MaterialPageRoute(builder: (_) => EvaluationListScreen(studentId: uid)));
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.payment, color: Colors.green),
+            title: const Text("الحالة المالية"),
+            subtitle: const Text("المبالغ المدفوعة والمتبقية"),
+            onTap: () {
+              final uid = Provider.of<AuthProvider>(context, listen: false).userModel!.uid;
+              Navigator.push(context, MaterialPageRoute(builder: (_) => PaymentHistoryScreen(studentId: uid)));
+            },
+          ),
         ],
       ),
     );

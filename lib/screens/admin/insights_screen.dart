@@ -1,189 +1,86 @@
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
-import '../../services/database_service.dart';
-import 'package:intl/intl.dart';
-import '../../models/attendance_model.dart';
-import '../../models/user_model.dart';
-import '../../utils/analytics_engine.dart';
-import '../../services/pdf_service.dart';
 import 'package:firebase_database/firebase_database.dart';
+import '../../models/user_model.dart';
+import '../../models/attendance_model.dart';
+import '../../utils/analytics_engine.dart';
 
 class InsightsScreen extends StatelessWidget {
   const InsightsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final dbService = DatabaseService();
+    final studentsRef = FirebaseDatabase.instance.ref().child('users');
+    final attendanceRef = FirebaseDatabase.instance.ref().child('attendance');
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("التحليلات والذكاء"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.picture_as_pdf),
-            onPressed: () => _exportFinancialReport(dbService),
-            tooltip: "تصدير تقرير مالي",
-          )
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionTitle("حالة المدفوعات"),
-            const SizedBox(height: 16),
-            _buildPaymentPieChart(dbService),
-            const SizedBox(height: 32),
-            _buildSectionTitle("توقعات الدخل الشهري"),
-            const SizedBox(height: 16),
-            _buildIncomeBarChart(dbService),
-            const SizedBox(height: 32),
-            _buildSectionTitle("تنبيهات أداء الطلاب"),
-            const SizedBox(height: 16),
-            _buildStudentAlerts(dbService),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.indigo));
-  }
-
-  Widget _buildPaymentPieChart(DatabaseService dbService) {
-    return SizedBox(
-      height: 200,
-      child: StreamBuilder<Map<dynamic, dynamic>>(
-        stream: dbService.getPayments(),
+      appBar: AppBar(title: const Text("التحليلات والذكاء")),
+      body: StreamBuilder(
+        stream: studentsRef.orderByChild('role').equalTo('student').onValue,
         builder: (context, snapshot) {
-          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-          int paid = 0, pending = 0, lateCount = 0;
-          snapshot.data!.forEach((_, payments) {
-            if (payments is Map) {
-              for (var p in payments.values) {
-                if (p['status'] == 'paid') {
-                  paid++;
-                } else if (p['status'] == 'pending') {
-                  pending++;
-                } else if (p['status'] == 'late') {
-                  lateCount++;
+          if (snapshot.hasData && snapshot.data!.snapshot.value != null) {
+            Map<dynamic, dynamic> studentsMap = snapshot.data!.snapshot.value as Map;
+            List<UserModel> students = studentsMap.entries
+                .map((e) => UserModel.fromMap(e.value, e.key))
+                .toList();
+
+            return FutureBuilder<Map<String, List<AttendanceModel>>>(
+              future: _fetchAllAttendance(attendanceRef, students),
+              builder: (context, attendanceSnapshot) {
+                if (attendanceSnapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
                 }
-              }
-            }
-          });
-          if (paid == 0 && pending == 0 && lateCount == 0) return const Center(child: Text("لا توجد بيانات"));
-          return PieChart(PieChartData(sections: [
-            PieChartSectionData(value: paid.toDouble(), color: Colors.green, title: 'مدفوع'),
-            PieChartSectionData(value: pending.toDouble(), color: Colors.orange, title: 'معلق'),
-            PieChartSectionData(value: lateCount.toDouble(), color: Colors.red, title: 'متأخر'),
-          ]));
+
+                final attendanceMap = attendanceSnapshot.data ?? {};
+
+                return ListView.builder(
+                  itemCount: students.length,
+                  itemBuilder: (context, index) {
+                    final student = students[index];
+                    final history = attendanceMap[student.uid] ?? [];
+                    final insight = AnalyticsEngine.analyzeAttendance(history);
+                    final isWarning = insight.contains("تنبيه");
+
+                    return Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      color: isWarning ? Colors.red.shade50 : null,
+                      child: ListTile(
+                        title: Text(student.name),
+                        subtitle: Text(insight),
+                        trailing: Icon(
+                          isWarning ? Icons.warning : Icons.info_outline,
+                          color: isWarning ? Colors.red : Colors.blue,
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            );
+          }
+          return const Center(child: Text("لا توجد بيانات طلاب حالياً"));
         },
       ),
     );
   }
 
-  Widget _buildIncomeBarChart(DatabaseService dbService) {
-    return SizedBox(
-      height: 200,
-      child: StreamBuilder<Map<dynamic, dynamic>>(
-        stream: dbService.getPayments(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-          Map<int, double> monthlyIncome = {};
-          snapshot.data!.forEach((_, payments) {
-            if (payments is Map) {
-              for (var p in payments.values) {
-                if (p['status'] == 'paid') {
-                  final date = DateTime.fromMillisecondsSinceEpoch(p['date'] ?? 0);
-                  monthlyIncome[date.month] = (monthlyIncome[date.month] ?? 0) + (p['amount'] ?? 0).toDouble();
-                }
-              }
-            }
-          });
-          if (monthlyIncome.isEmpty) return const Center(child: Text("لا توجد بيانات"));
-          return BarChart(BarChartData(
-            barGroups: monthlyIncome.entries.map((e) => BarChartGroupData(x: e.key, barRods: [BarChartRodData(toY: e.value, color: Colors.blue)])).toList(),
-            titlesData: FlTitlesData(bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, getTitlesWidget: (v, _) => Text(DateFormat('MMM').format(DateTime(2024, v.toInt())))))),
-          ));
-        },
-      ),
-    );
-  }
-
-  Widget _buildStudentAlerts(DatabaseService dbService) {
-    return StreamBuilder<List<UserModel>>(
-      stream: FirebaseDatabase.instance.ref().child('users').orderByChild('role').equalTo('student').onValue.map((event) {
-        Map<dynamic, dynamic>? map = event.snapshot.value as Map?;
-        if (map == null) return [];
-        return map.entries.map((e) => UserModel.fromMap(e.value, e.key)).toList();
-      }),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) return const SizedBox();
-        final students = snapshot.data!;
-
-        return FutureBuilder<Map<String, List<AttendanceModel>>>(
-          future: _fetchAllAttendance(),
-          builder: (context, attSnap) {
-            if (!attSnap.hasData) return const Center(child: CircularProgressIndicator());
-            final attMap = attSnap.data!;
-
-            List<Widget> alerts = [];
-            for (var student in students) {
-              final history = attMap[student.uid] ?? [];
-              final insight = AnalyticsEngine.analyzeAttendance(history);
-              if (insight.contains("تنبيه") || insight.contains("ملاحظة")) {
-                alerts.add(Card(
-                  color: insight.contains("تنبيه") ? Colors.red.shade50 : Colors.orange.shade50,
-                  child: ListTile(
-                    title: Text(student.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(insight),
-                    trailing: Icon(insight.contains("تنبيه") ? Icons.warning : Icons.info, color: insight.contains("تنبيه") ? Colors.red : Colors.orange),
-                  ),
-                ));
-              }
-            }
-            if (alerts.isEmpty) return const Center(child: Text("جميع الطلاب منتظمون حالياً ✨"));
-            return Column(children: alerts);
-          },
-        );
-      },
-    );
-  }
-
-  Future<Map<String, List<AttendanceModel>>> _fetchAllAttendance() async {
-    final ref = FirebaseDatabase.instance.ref().child('attendance');
-    final snapshot = await ref.get();
+  Future<Map<String, List<AttendanceModel>>> _fetchAllAttendance(
+      DatabaseReference ref, List<UserModel> students) async {
     final Map<String, List<AttendanceModel>> result = {};
+
+    // In a real app, we might want a different structure or query
+    // But for MVP, we'll iterate through sessions or students
+    DataSnapshot snapshot = await ref.get();
     if (snapshot.exists) {
-      for (var session in (snapshot.value as Map).values) {
-        for (var entry in (session as Map).entries) {
-          result.putIfAbsent(entry.key, () => []).add(AttendanceModel.fromMap(entry.value, entry.key));
+      Map<dynamic, dynamic> sessions = snapshot.value as Map;
+      for (var sessionEntry in sessions.entries) {
+        Map<dynamic, dynamic> attendances = sessionEntry.value as Map;
+        for (var attEntry in attendances.entries) {
+          final studentId = attEntry.key;
+          final model = AttendanceModel.fromMap(attEntry.value, studentId);
+          result.putIfAbsent(studentId, () => []).add(model);
         }
       }
     }
     return result;
-  }
-
-  void _exportFinancialReport(DatabaseService dbService) async {
-    final paymentsMap = await dbService.getPayments().first;
-    List<Map<String, dynamic>> paymentsList = [];
-
-    paymentsMap.forEach((_, payments) {
-      if (payments is Map) {
-        for (var p in payments.values) {
-          paymentsList.add({
-            'amount': p['amount'],
-            'date': DateTime.fromMillisecondsSinceEpoch(p['date'] ?? 0),
-            'status': p['status'],
-          });
-        }
-      }
-    });
-
-    if (paymentsList.isNotEmpty) {
-      await PdfService().generateFinancialReport(paymentsList);
-    }
   }
 }
