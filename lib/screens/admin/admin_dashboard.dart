@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import 'student_management.dart';
 import 'session_list_screen.dart';
+import '../shared/homework_list_screen.dart';
 import 'payment_management_screen.dart';
 import 'insights_screen.dart';
 import 'group_management_screen.dart';
@@ -49,6 +50,9 @@ class AdminDashboard extends StatelessWidget {
           }),
           _buildCard(context, "الحصص", Icons.book, Colors.purple, () {
             Navigator.push(context, MaterialPageRoute(builder: (_) => const SessionListScreen()));
+          }),
+          _buildCard(context, "الواجبات", Icons.assignment, Colors.blueGrey, () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const HomeworkListScreen()));
           }),
           _buildCard(context, "التحليلات", Icons.insights, Colors.indigo, () {
             Navigator.push(context, MaterialPageRoute(builder: (_) => const InsightsScreen()));

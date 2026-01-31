@@ -13,59 +13,80 @@ class StudentManagement extends StatelessWidget {
     final nameController = TextEditingController();
     final phoneController = TextEditingController();
     final emailController = TextEditingController();
+    String? selectedParentId;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("إضافة طالب جديد", textAlign: TextAlign.right),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(controller: nameController, textAlign: TextAlign.right, decoration: const InputDecoration(labelText: "الاسم")),
-            TextField(controller: emailController, textAlign: TextAlign.right, decoration: const InputDecoration(labelText: "البريد الإلكتروني")),
-            TextField(controller: phoneController, textAlign: TextAlign.right, decoration: const InputDecoration(labelText: "رقم الهاتف")),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("إلغاء")),
-          ElevatedButton(
-            onPressed: () async {
-              if (nameController.text.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("يرجى إدخال اسم الطالب")));
-                return;
-              }
-              if (phoneController.text.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("يرجى إدخال رقم الهاتف")));
-                return;
-              }
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text("إضافة طالب جديد", textAlign: TextAlign.right),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(controller: nameController, textAlign: TextAlign.right, decoration: const InputDecoration(labelText: "الاسم")),
+                  TextField(controller: emailController, textAlign: TextAlign.right, decoration: const InputDecoration(labelText: "البريد الإلكتروني")),
+                  TextField(controller: phoneController, textAlign: TextAlign.right, decoration: const InputDecoration(labelText: "رقم الهاتف")),
+                  const SizedBox(height: 16),
+                  StreamBuilder<List<UserModel>>(
+                    stream: FirebaseDatabase.instance.ref().child('users').orderByChild('role').equalTo('parent').onValue.map((event) {
+                      Map<dynamic, dynamic>? map = event.snapshot.value as Map?;
+                      if (map == null) return [];
+                      return map.entries.map((e) => UserModel.fromMap(e.value, e.key)).toList();
+                    }),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) return const SizedBox();
+                      return DropdownButtonFormField<String>(
+                        decoration: const InputDecoration(labelText: "ولي الأمر"),
+                        items: snapshot.data!.map((p) => DropdownMenuItem(value: p.uid, child: Text(p.name))).toList(),
+                        onChanged: (val) => setState(() => selectedParentId = val),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text("إلغاء")),
+              ElevatedButton(
+                onPressed: () async {
+                  if (nameController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("يرجى إدخال اسم الطالب")));
+                    return;
+                  }
+                  if (phoneController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("يرجى إدخال رقم الهاتف")));
+                    return;
+                  }
 
-              if (nameController.text.isNotEmpty) {
-                final userRef = FirebaseDatabase.instance.ref().child('users').push();
-                final uid = userRef.key!;
+                  final userRef = FirebaseDatabase.instance.ref().child('users').push();
+                  final uid = userRef.key!;
 
-                await userRef.set({
-                  'name': nameController.text,
-                  'email': emailController.text,
-                  'phone': phoneController.text,
-                  'role': 'student',
-                  'created_at': DateTime.now().millisecondsSinceEpoch,
-                });
+                  await userRef.set({
+                    'name': nameController.text,
+                    'email': emailController.text,
+                    'phone': phoneController.text,
+                    'role': 'student',
+                    'created_at': DateTime.now().millisecondsSinceEpoch,
+                  });
 
-                final profile = StudentProfile(
-                  uid: uid,
-                  parentId: "",
-                  groupIds: [],
-                  paymentType: "monthly",
-                  basePrice: 0,
-                );
-                await DatabaseService().updateStudentProfile(profile);
+                  final profile = StudentProfile(
+                    uid: uid,
+                    parentId: selectedParentId ?? "",
+                    groupIds: [],
+                    paymentType: "monthly",
+                    basePrice: 0,
+                  );
+                  await DatabaseService().updateStudentProfile(profile);
 
-                Navigator.pop(context);
-              }
-            },
-            child: const Text("إضافة"),
-          ),
-        ],
+                  Navigator.pop(context);
+                },
+                child: const Text("إضافة"),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

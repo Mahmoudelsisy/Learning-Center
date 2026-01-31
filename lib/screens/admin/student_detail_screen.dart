@@ -147,6 +147,11 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                       const SizedBox(height: 16),
                       _buildGroupManager(profile),
                       const SizedBox(height: 32),
+                      const Text("ربط ولي الأمر",
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 16),
+                      _buildParentLinker(profile),
+                      const SizedBox(height: 32),
                       const Text("سجل الحضور والغياب",
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 16),
@@ -223,6 +228,45 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
         .child(widget.student.uid);
     final newGroups = List<String>.from(profile.groupIds)..remove(groupId);
     await ref.update({'group_ids': newGroups});
+  }
+
+  Widget _buildParentLinker(StudentProfile profile) {
+    return StreamBuilder<List<UserModel>>(
+      stream: FirebaseDatabase.instance.ref().child('users').orderByChild('role').equalTo('parent').onValue.map((event) {
+        Map<dynamic, dynamic>? map = event.snapshot.value as Map?;
+        if (map == null) return [];
+        return map.entries.map((e) => UserModel.fromMap(e.value, e.key)).toList();
+      }),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const SizedBox();
+        final parents = snapshot.data!;
+        String? currentParentName;
+        if (profile.parentId.isNotEmpty) {
+          final p = parents.firstWhere((p) => p.uid == profile.parentId, orElse: () => UserModel(uid: "", name: "غير معروف", email: "", role: UserRole.parent, phone: "", createdAt: DateTime.now()));
+          currentParentName = p.name;
+        }
+
+        return Column(
+          children: [
+            if (profile.parentId.isNotEmpty)
+              ListTile(
+                title: Text("ولي الأمر الحالي: $currentParentName", textAlign: TextAlign.right),
+                trailing: const Icon(Icons.verified_user, color: Colors.green),
+              ),
+            DropdownButtonFormField<String>(
+              decoration: const InputDecoration(labelText: "تغيير ولي الأمر"),
+              value: profile.parentId.isEmpty ? null : profile.parentId,
+              items: parents.map((p) => DropdownMenuItem(value: p.uid, child: Text(p.name))).toList(),
+              onChanged: (val) {
+                if (val != null) {
+                  FirebaseDatabase.instance.ref().child('students_profiles').child(widget.student.uid).update({'parent_id': val});
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildAttendanceHistory() {

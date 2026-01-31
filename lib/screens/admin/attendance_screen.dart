@@ -19,15 +19,32 @@ class AttendanceScreen extends StatefulWidget {
 class _AttendanceScreenState extends State<AttendanceScreen> {
   Map<String, AttendanceStatus> attendanceData = {};
   final DatabaseService _dbService = DatabaseService();
+  bool _isInitialized = false;
+
+  void _initializeAttendance(List<AttendanceModel> savedData) {
+    if (!_isInitialized) {
+      for (var record in savedData) {
+        attendanceData[record.studentId] = record.status;
+      }
+      _isInitialized = true;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("تحضير: ${widget.session.title}")),
-      body: StreamBuilder<List<StudentProfile>>(
-        stream: _dbService.getStudents(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
+      body: StreamBuilder<List<AttendanceModel>>(
+        stream: _dbService.getAttendance(widget.session.id),
+        builder: (context, attendanceSnap) {
+          if (attendanceSnap.hasData) {
+            _initializeAttendance(attendanceSnap.data!);
+          }
+
+          return StreamBuilder<List<StudentProfile>>(
+            stream: _dbService.getStudents(),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
             final allStudents = snapshot.data!;
             // Filter students who belong to this session's group
             final groupStudents = allStudents.where((s) => s.groupIds.contains(widget.session.groupId)).toList();
@@ -84,8 +101,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                 )
               ],
             );
-          }
-          return const Center(child: CircularProgressIndicator());
+              }
+              return const Center(child: CircularProgressIndicator());
+            },
+          );
         },
       ),
     );
