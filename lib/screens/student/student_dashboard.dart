@@ -5,6 +5,7 @@ import 'package:firebase_database/firebase_database.dart';
 import '../../providers/auth_provider.dart';
 import '../shared/homework_list_screen.dart';
 import '../shared/evaluation_list_screen.dart';
+import '../shared/material_list_screen.dart';
 import '../../utils/app_colors.dart';
 
 class StudentDashboard extends StatelessWidget {
@@ -43,8 +44,8 @@ class StudentDashboard extends StatelessWidget {
                 _buildCard(context, "التقييمات", Icons.bar_chart, Colors.green, () {
                   Navigator.push(context, MaterialPageRoute(builder: (_) => EvaluationListScreen(studentId: user.uid)));
                 }),
-                _buildCard(context, "سجل الحضور", Icons.calendar_today, Colors.orange, () {
-                  // Link to student attendance view if available
+                _buildCard(context, "المواد العلمية", Icons.menu_book, Colors.orange, () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const MaterialListScreen()));
                 }),
                 _buildCard(context, "الملف الشخصي", Icons.person, Colors.purple, () {
                   // Link to profile

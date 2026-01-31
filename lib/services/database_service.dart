@@ -55,6 +55,14 @@ class DatabaseService {
     });
   }
 
+  Stream<List<StudentProfile>> getChildren(String parentId) {
+    return _dbRef.child('students_profiles').orderByChild('parent_id').equalTo(parentId).onValue.map((event) {
+      Map<dynamic, dynamic>? studentsMap = event.snapshot.value as Map?;
+      if (studentsMap == null) return [];
+      return studentsMap.entries.map((e) => StudentProfile.fromMap(e.value, e.key)).toList();
+    });
+  }
+
   // Groups
   Future<void> createGroup(GroupModel group) async {
     await _dbRef.child('groups').child(group.id).set(group.toMap());

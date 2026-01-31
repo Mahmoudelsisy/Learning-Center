@@ -8,6 +8,7 @@ import '../../providers/auth_provider.dart';
 import '../../services/database_service.dart';
 import 'attendance_screen.dart';
 import '../../services/pdf_service.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class SessionListScreen extends StatelessWidget {
   const SessionListScreen({super.key});
@@ -33,31 +34,50 @@ class SessionListScreen extends StatelessWidget {
             sessions.sort((a, b) => b.date.compareTo(a.date));
 
             return ListView.builder(
+              padding: const EdgeInsets.all(16),
               itemCount: sessions.length,
               itemBuilder: (context, index) {
                 final session = sessions[index];
-                return ListTile(
-                  title: Text(session.title, textAlign: TextAlign.right),
-                  subtitle: Text("${session.date.toLocal()}".split(' ')[0], textAlign: TextAlign.right),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.picture_as_pdf, color: Colors.red),
-                    onPressed: () => PdfService().generateSessionSummary(session, []),
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => AttendanceScreen(session: session),
-                      ),
-                    );
-                  },
-                );
+                return _buildSessionCard(context, session);
               },
             );
           }
           return const Center(child: Text("لا توجد حصص مضافة"));
         },
       ),
+    );
+  }
+
+  Widget _buildSessionCard(BuildContext context, SessionModel session) {
+    return FutureBuilder(
+      future: Future.wait([
+        FirebaseDatabase.instance.ref().child('groups').child(session.groupId).get(),
+        FirebaseDatabase.instance.ref().child('subjects').child(session.subjectId).get(),
+      ]),
+      builder: (context, AsyncSnapshot<List<DataSnapshot>> snapshot) {
+        String groupName = "مجموعة...";
+        String subjectName = "مادة...";
+        if (snapshot.hasData) {
+          groupName = snapshot.data![0].child('name').value as String? ?? "مجموعة غير معروفة";
+          subjectName = snapshot.data![1].child('name').value as String? ?? "مادة غير معروفة";
+        }
+
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: ListTile(
+            title: Text(session.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text("$subjectName • $groupName • ${session.date.toLocal()}".split(' ')[0]),
+            trailing: IconButton(
+              icon: const Icon(Icons.picture_as_pdf, color: Colors.red),
+              onPressed: () => PdfService().generateSessionSummary(session, []),
+            ),
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => AttendanceScreen(session: session)));
+            },
+          ),
+        ).animate().fadeIn().slideX();
+      },
     );
   }
 

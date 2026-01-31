@@ -26,21 +26,41 @@ class HomeworkListScreen extends StatelessWidget {
               itemCount: homeworks.length,
               itemBuilder: (context, index) {
                 final hw = homeworks[index];
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  child: ListTile(
-                    title: Text(hw.description, textAlign: TextAlign.right),
-                    subtitle: Text("موعد التسليم: ${hw.deadline.toLocal()}".split(' ')[0], textAlign: TextAlign.right),
-                    leading: const Icon(Icons.assignment_turned_in, color: Colors.blue),
-                  ),
-                ).animate().fadeIn().slideX();
+                return _buildHomeworkCard(context, hw);
               },
             );
           }
           return const Center(child: Text("لا توجد واجبات حالية"));
         },
       ),
+    );
+  }
+
+  Widget _buildHomeworkCard(BuildContext context, HomeworkModel hw) {
+    return FutureBuilder<DataSnapshot>(
+      future: FirebaseDatabase.instance.ref().child('sessions').child(hw.sessionId).get(),
+      builder: (context, sessionSnap) {
+        String sessionTitle = "جلسة...";
+        if (sessionSnap.hasData && sessionSnap.data!.value != null) {
+          sessionTitle = (sessionSnap.data!.value as Map)['title'] ?? "جلسة غير معروفة";
+        }
+
+        return Card(
+          margin: const EdgeInsets.only(bottom: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: ListTile(
+            title: Text(hw.description, textAlign: TextAlign.right, style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text("الموضوع: $sessionTitle", textAlign: TextAlign.right),
+                Text("موعد التسليم: ${hw.deadline.toLocal()}".split(' ')[0], textAlign: TextAlign.right),
+              ],
+            ),
+            leading: const Icon(Icons.assignment_turned_in, color: Colors.blue),
+          ),
+        ).animate().fadeIn().slideX();
+      },
     );
   }
 }

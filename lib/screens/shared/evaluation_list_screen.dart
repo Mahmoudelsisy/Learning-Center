@@ -12,7 +12,18 @@ class EvaluationListScreen extends StatelessWidget {
     final evalRef = FirebaseDatabase.instance.ref().child('evaluations').child(studentId);
 
     return Scaffold(
-      appBar: AppBar(title: const Text("التقييمات والأداء")),
+      appBar: AppBar(
+        title: FutureBuilder<DataSnapshot>(
+          future: FirebaseDatabase.instance.ref().child('users').child(studentId).get(),
+          builder: (context, snapshot) {
+            String name = "التقييمات";
+            if (snapshot.hasData && snapshot.data!.value != null) {
+              name = "تقييمات: ${(snapshot.data!.value as Map)['name']}";
+            }
+            return Text(name);
+          },
+        ),
+      ),
       body: StreamBuilder(
         stream: evalRef.onValue,
         builder: (context, snapshot) {

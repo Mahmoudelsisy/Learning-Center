@@ -10,6 +10,7 @@ import 'group_management_screen.dart';
 import 'subject_management_screen.dart';
 import 'ai_assistant_screen.dart';
 import 'lesson_planner_screen.dart';
+import 'material_management_screen.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
@@ -62,6 +63,9 @@ class AdminDashboard extends StatelessWidget {
           }),
           _buildCard(context, "تحضير الدروس", Icons.menu_book, Colors.deepOrange, () {
             Navigator.push(context, MaterialPageRoute(builder: (_) => const LessonPlannerScreen()));
+          }),
+          _buildCard(context, "المواد العلمية", Icons.science, Colors.blueGrey, () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const MaterialManagementScreen()));
           }),
         ],
       ),
