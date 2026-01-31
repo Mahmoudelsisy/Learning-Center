@@ -311,7 +311,11 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
   }
 
   void _awardStars() async {
-    if (_reasonController.text.isEmpty || _amountController.text.isEmpty) return;
+    final amount = int.tryParse(_amountController.text);
+    if (_reasonController.text.isEmpty || amount == null || amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("يرجى إدخال بيانات صحيحة")));
+      return;
+    }
 
     final ref = FirebaseDatabase.instance
         .ref()
@@ -321,7 +325,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
     final star = StarModel(
       id: ref.key!,
       studentId: widget.student.uid,
-      amount: int.parse(_amountController.text),
+      amount: amount,
       reason: _reasonController.text,
       timestamp: DateTime.now(),
     );

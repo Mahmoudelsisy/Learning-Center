@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart';
 import '../../services/database_service.dart';
 import '../../models/group_model.dart';
+import '../../models/student_profile.dart';
 
 class GroupManagementScreen extends StatefulWidget {
   const GroupManagementScreen({super.key});
@@ -77,6 +79,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen> {
                   title: Text(group.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text(group.schedule),
                   trailing: const Icon(Icons.group_work, color: Colors.teal),
+                  onTap: () => _showGroupStudents(group),
                 ),
               );
             },
@@ -86,6 +89,56 @@ class _GroupManagementScreenState extends State<GroupManagementScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddGroupDialog,
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  void _showGroupStudents(GroupModel group) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text("طلاب مجموعة: ${group.name}", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const Divider(),
+            Expanded(
+              child: StreamBuilder<List<StudentProfile>>(
+                stream: _dbService.getStudents(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                  final groupStudents = snapshot.data!.where((s) => s.groupIds.contains(group.id)).toList();
+
+                  if (groupStudents.isEmpty) {
+                    return const Center(child: Text("لا يوجد طلاب في هذه المجموعة بعد."));
+                  }
+
+                  return ListView.builder(
+                    itemCount: groupStudents.length,
+                    itemBuilder: (context, index) {
+                      final student = groupStudents[index];
+                      return FutureBuilder<DataSnapshot>(
+                        future: FirebaseDatabase.instance.ref().child('users').child(student.uid).get(),
+                        builder: (context, userSnap) {
+                          if (!userSnap.hasData || userSnap.data!.value == null) return const SizedBox();
+                          final name = (userSnap.data!.value as Map)['name'] ?? "مجهول";
+                          return ListTile(
+                            leading: const CircleAvatar(child: Icon(Icons.person)),
+                            title: Text(name, textAlign: TextAlign.right),
+                            subtitle: Text(student.tags.join(' • '), textAlign: TextAlign.right),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

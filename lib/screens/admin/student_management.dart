@@ -30,6 +30,15 @@ class StudentManagement extends StatelessWidget {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("إلغاء")),
           ElevatedButton(
             onPressed: () async {
+              if (nameController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("يرجى إدخال اسم الطالب")));
+                return;
+              }
+              if (phoneController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("يرجى إدخال رقم الهاتف")));
+                return;
+              }
+
               if (nameController.text.isNotEmpty) {
                 final userRef = FirebaseDatabase.instance.ref().child('users').push();
                 final uid = userRef.key!;

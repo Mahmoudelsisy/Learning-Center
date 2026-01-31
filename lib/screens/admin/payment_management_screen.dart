@@ -57,10 +57,11 @@ class PaymentManagementScreen extends StatelessWidget {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("إلغاء")),
           ElevatedButton(
             onPressed: () async {
-              if (amountController.text.isNotEmpty) {
+              final amount = int.tryParse(amountController.text);
+              if (amount != null && amount > 0) {
                 final ref = FirebaseDatabase.instance.ref().child('payments').child(student.uid).push();
                 await ref.set({
-                  'amount': int.parse(amountController.text),
+                  'amount': amount,
                   'date': DateTime.now().millisecondsSinceEpoch,
                   'status': 'paid',
                   'type': 'manual',

@@ -7,6 +7,7 @@ import '../shared/homework_list_screen.dart';
 import '../shared/evaluation_list_screen.dart';
 import '../shared/material_list_screen.dart';
 import '../shared/notification_list_screen.dart';
+import '../shared/attendance_history_screen.dart';
 import '../../utils/app_colors.dart';
 
 class StudentDashboard extends StatelessWidget {
@@ -47,6 +48,9 @@ class StudentDashboard extends StatelessWidget {
                 }),
                 _buildCard(context, "المواد العلمية", Icons.menu_book, Colors.orange, () {
                   Navigator.push(context, MaterialPageRoute(builder: (_) => const MaterialListScreen()));
+                }),
+                _buildCard(context, "سجل الحضور", Icons.calendar_month, Colors.teal, () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => AttendanceHistoryScreen(studentId: user.uid)));
                 }),
                 _buildCard(context, "التنبيهات", Icons.notifications, Colors.redAccent, () {
                   Navigator.push(context, MaterialPageRoute(builder: (_) => NotificationListScreen(uid: user.uid)));

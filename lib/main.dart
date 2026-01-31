@@ -37,9 +37,19 @@ class LearningCenterApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(
             seedColor: AppColors.primary,
             surface: AppColors.background,
+            brightness: Brightness.light,
           ),
           textTheme: GoogleFonts.alexandriaTextTheme(),
         ),
+        darkTheme: ThemeData(
+          useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: AppColors.primary,
+            brightness: Brightness.dark,
+          ),
+          textTheme: GoogleFonts.alexandriaTextTheme(ThemeData.dark().textTheme),
+        ),
+        themeMode: ThemeMode.system,
         home: const AuthWrapper(),
       ),
     );

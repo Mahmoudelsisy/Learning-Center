@@ -6,6 +6,8 @@ import '../../providers/auth_provider.dart';
 import '../shared/payment_history_screen.dart';
 import '../shared/evaluation_list_screen.dart';
 import '../shared/notification_list_screen.dart';
+import '../shared/attendance_history_screen.dart';
+import '../shared/material_list_screen.dart';
 import '../../utils/app_colors.dart';
 import '../../services/database_service.dart';
 import '../../models/student_profile.dart';
@@ -99,6 +101,16 @@ class ParentDashboard extends StatelessWidget {
                                 leading: const Icon(Icons.notifications, color: Colors.red),
                                 title: const Text("تنبيهات الابن", textAlign: TextAlign.right),
                                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => NotificationListScreen(uid: profile.uid))),
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.calendar_today, color: Colors.teal),
+                                title: const Text("سجل الحضور", textAlign: TextAlign.right),
+                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AttendanceHistoryScreen(studentId: profile.uid))),
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.menu_book, color: Colors.orange),
+                                title: const Text("المواد العلمية", textAlign: TextAlign.right),
+                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MaterialListScreen())),
                               ),
                             ],
                           ),

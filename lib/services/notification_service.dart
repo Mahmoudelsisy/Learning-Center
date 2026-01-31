@@ -12,7 +12,9 @@ class NotificationService {
         AndroidInitializationSettings('@mipmap/ic_launcher');
     const InitializationSettings initializationSettings =
         InitializationSettings(android: initializationSettingsAndroid);
-    await _localNotifications.initialize(initializationSettings);
+
+    // Fix for version 20.x of flutter_local_notifications
+    await _localNotifications.initialize(settings: initializationSettings);
 
     // Request permissions
     await _fcm.requestPermission(
